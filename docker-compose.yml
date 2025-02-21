@@ -31,7 +31,7 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
     ports:
-      - "8080:8080"
+      - "8181:8181"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
@@ -42,7 +42,7 @@ services:
       - my_network
 
   client:
-    build: ./client          # Путь к Dockerfile вашего React-приложения
+    build: ./client
     container_name: client
     ports:
       - "80:80"

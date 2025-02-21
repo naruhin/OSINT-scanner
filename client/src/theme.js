@@ -1,69 +1,39 @@
-import { createTheme } from "@mui/material/styles";
+import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
     palette: {
-        mode: "dark",
-        primary: {
-            main: "#00bcd4", // accent blue
-        },
-        secondary: {
-            main: "#ff4081", // pink accent
-        },
+        mode: 'dark',
+        primary: { main: '#064d85' },
         background: {
-            default: "#121212",
-            paper: "#1e1e1e",
+            default: '#0D0D0D', // основной фон приложения
+            paper: 'rgba(28,28,28,0.6)', // фон контейнеров с увеличенной прозрачностью
         },
         text: {
-            primary: "#e0e0e0",
-            secondary: "#b0b0b0",
+            primary: '#E0E0E0',
+            secondary: '#B0B0B0',
         },
     },
     typography: {
-        fontFamily: "'Roboto', sans-serif",
-        body1: {
-            fontSize: "1.1rem",
-            lineHeight: 1.6,
-            color: "#e0e0e0",
-        },
-        body2: {
-            fontSize: "1rem",
-            lineHeight: 1.5,
-            color: "#e0e0e0",
-        },
-        h3: {
-            fontWeight: 700,
-            fontSize: "2.5rem",
-            color: "#e0e0e0",
-        },
-        h5: {
-            fontWeight: 600,
-            fontSize: "1.75rem",
-            color: "#e0e0e0",
-        },
+        fontFamily: "'Inter', 'Roboto', sans-serif",
+    },
+    shape: {
+        borderRadius: 12,
     },
     components: {
-        MuiPaper: {
-            styleOverrides: {
-                root: {
-                    borderRadius: "16px",
-                    boxShadow: "0px 8px 24px rgba(0, 0, 0, 0.7)",
-                    backgroundColor: "#1e1e1e",
-                    color: "#e0e0e0",
-                },
-            },
-        },
         MuiButton: {
             styleOverrides: {
                 root: {
-                    borderRadius: "12px",
-                    textTransform: "none",
+                    textTransform: 'none',
+                    padding: '10px 20px',
                     fontWeight: 600,
-                    padding: "12px 24px",
-                    transition: "all 0.3s ease",
-                    background: "linear-gradient(45deg, #00bcd4, #ff4081)",
-                    color: "#fff",
-                    "&:hover": {
-                        background: "linear-gradient(45deg, #ff4081, #00bcd4)",
+                    borderRadius: 12,
+                    backgroundColor: 'rgba(0,87,161,0.8)',
+                    color: '#ffffff',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+                    transition: 'background-color 0.3s ease, box-shadow 0.3s ease',
+                    '&:hover': {
+                        backgroundColor: 'rgb(0,56,99)',
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.7)',
                     },
                 },
             },
@@ -71,12 +41,47 @@ const theme = createTheme({
         MuiTextField: {
             styleOverrides: {
                 root: {
-                    "& input": {
-                        color: "#e0e0e0",
+                    backgroundColor: 'rgba(28,28,28,0.6)', // увеличенная прозрачность
+                    borderRadius: 12,
+                    '& .MuiInputBase-input': {
+                        color: '#E0E0E0',
+                        padding: '10px',
                     },
-                    "& label": {
-                        color: "#e0e0e0",
+                    '& .MuiInputLabel-root': {
+                        color: 'rgba(224,224,224,0.8)',
                     },
+                    '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                            borderColor: 'rgba(224,224,224,0.3)',
+                            borderRadius: 12,
+                        },
+                        '&:hover fieldset': {
+                            borderColor: 'rgba(224,224,224,0.5)',
+                        },
+                        '&.Mui-focused fieldset': {
+                            borderColor: 'rgba(224,224,224,0.7)',
+                        },
+                    },
+                },
+            },
+        },
+        MuiCard: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 12,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.7)', // только тень, без обводки
+                    padding: '16px',
+                    backgroundColor: 'rgba(28,28,28,0.7)', // немного прозрачнее
+                },
+            },
+        },
+        MuiPaper: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 12,
+                    padding: '16px',
+                    backgroundColor: 'rgba(28,28,28,0.6)', // прозрачный фон для контейнеров
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.7)', // используем тени вместо обводки
                 },
             },
         },

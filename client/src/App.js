@@ -1,47 +1,34 @@
-import React, { useState, useEffect } from "react";
-import { ThemeProvider, Container, Typography, Box, Paper, Grid } from "@mui/material";
-import { motion } from "framer-motion";
-import theme from "./theme";
-import ScanForm from "./components/ScanForm";
-import ScanCard from "./components/ScanCard";
-import ScanDetailsModal from "./components/ScanDetailsModal";
+import React, { useState, useEffect } from 'react';
+import { ThemeProvider, CssBaseline, Container, Typography, Box, Paper } from '@mui/material';
+import { DndContext, closestCorners, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, useSortable, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import theme from './theme';
+import BackgroundGradientAnimation from './components/BackgroundGradientAnimation';
+import ScanForm from './components/ScanForm';
+import ScanCard from './components/ScanCard';
+import ScanDetailsModal from './components/ScanDetailsModal';
 
 function App() {
     const [scans, setScans] = useState([]);
     const [selectedScan, setSelectedScan] = useState(null);
 
     useEffect(() => {
-        fetchScansFromServer();
+        fetch('/api/v1/scans')
+            .then((response) => response.json())
+            .then((data) => setScans(data))
+            .catch((error) => console.error('Ошибка при загрузке сканов:', error));
     }, []);
 
-    const fetchScansFromServer = () => {
-        fetch(`/scans`)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Error fetching scans list");
-                }
-                return response.json();
-            })
-            .then((data) => setScans(data))
-            .catch((error) => console.error("Error:", error));
-    };
-
     const handleScan = (domain) => {
-        fetch(`/scan`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+        fetch('/api/v1/scans', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ domain }),
         })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Error launching scan");
-                }
-                return response.json();
-            })
-            .then((newScan) => {
-                setScans((prev) => [...prev, newScan]);
-            })
-            .catch((error) => console.error("Error:", error));
+            .then((response) => response.json())
+            .then((newScan) => setScans((prev) => [...prev, newScan]))
+            .catch((error) => console.error('Ошибка запуска скана:', error));
     };
 
     const handleShowDetails = (scan) => {
@@ -52,26 +39,25 @@ function App() {
         setSelectedScan(null);
     };
 
+    const sensors = useSensors(
+        useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+        useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+    );
+
+    const handleDragEnd = (event) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+
+        const oldIndex = scans.findIndex((scan) => scan.id === active.id);
+        const newIndex = scans.findIndex((scan) => scan.id === over.id);
+        setScans(arrayMove(scans, oldIndex, newIndex));
+    };
+
     return (
         <ThemeProvider theme={theme}>
-            <Box
-                sx={{
-                    background: "linear-gradient(135deg, #0f2027, #203a43, #2c5364)",
-                    backgroundSize: "800% 800%",
-                    animation: "gradientAnimation 15s ease infinite",
-                    minHeight: "100vh",
-                    py: 4,
-                    px: 2,
-                }}
-            >
-                {/* Global keyframes for animated gradient */}
-                <style>{`
-          @keyframes gradientAnimation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-        `}</style>
+            <CssBaseline />
+            <BackgroundGradientAnimation />
+            <Box sx={{ minHeight: '100vh', py: 4 }}>
                 <Container maxWidth="lg">
                     <Paper sx={{ p: 4, mb: 4 }}>
                         <Typography variant="h3" align="center" gutterBottom>
@@ -80,29 +66,49 @@ function App() {
                         <ScanForm onScan={handleScan} />
                     </Paper>
                     <Paper sx={{ p: 4 }}>
-                        {scans.length === 0 ? (
-                            <Typography align="center" color="text.secondary">
-                                No scans available. Launch your first scan!
-                            </Typography>
-                        ) : (
-                            <Grid container spacing={3}>
-                                {scans.map((scan) => (
-                                    <Grid item xs={12} sm={6} md={4} key={scan.id}>
-                                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                            <ScanCard scan={scan} onShowDetails={handleShowDetails} />
-                                        </motion.div>
-                                    </Grid>
-                                ))}
-                            </Grid>
-                        )}
+                        <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+                            <SortableContext items={scans} strategy={rectSortingStrategy}>
+                                <Box
+                                    sx={{
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                                        gap: 2,
+                                        padding: 2,
+                                        minHeight: '300px',
+                                        borderRadius: 2,
+                                        overflow: 'hidden',
+                                    }}
+                                >
+                                    {scans.map((scan) => (
+                                        <SortableItem key={scan.id} scan={scan} onShowDetails={handleShowDetails} />
+                                    ))}
+                                </Box>
+                            </SortableContext>
+                        </DndContext>
                     </Paper>
                 </Container>
-                {selectedScan && (
-                    <ScanDetailsModal scan={selectedScan} onClose={handleCloseModal} />
-                )}
+                {selectedScan && <ScanDetailsModal scan={selectedScan} onClose={handleCloseModal} />}
             </Box>
         </ThemeProvider>
     );
 }
 
 export default App;
+
+function SortableItem({ scan, onShowDetails }) {
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: scan.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        width: '100%',
+        height: 200,
+        opacity: transform ? 0.9 : 1,
+    };
+
+    return (
+        <Box ref={setNodeRef} style={style} {...attributes} {...listeners}>
+            <ScanCard scan={scan} onShowDetails={onShowDetails} />
+        </Box>
+    );
+}

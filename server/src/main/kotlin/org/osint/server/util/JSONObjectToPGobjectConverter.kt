@@ -7,20 +7,19 @@ import jakarta.persistence.Converter
 
 @Converter(autoApply = true)
 class JSONObjectToPGobjectConverter : AttributeConverter<JSONObject, PGobject> {
-    override fun convertToDatabaseColumn(attribute: JSONObject?): PGobject? {
-        if (attribute == null) return null
-        return try {
-            val pgObject = PGobject().apply {
-                type = "jsonb"
-                value = attribute.toString()  // value как JSON-строка
-            }
-            pgObject
-        } catch (ex: Exception) {
-            throw IllegalArgumentException("Could not convert JSONObject to PGobject", ex)
-        }
-    }
 
-    override fun convertToEntityAttribute(dbData: PGobject?): JSONObject? {
-        return dbData?.value?.let { JSONObject(it) }
-    }
+    override fun convertToDatabaseColumn(attribute: JSONObject?): PGobject? =
+        attribute?.let {
+            try {
+                PGobject().apply {
+                    type = "jsonb"
+                    value = it.toString()
+                }
+            } catch (ex: Exception) {
+                throw IllegalArgumentException("Could not convert JSONObject to PGobject", ex)
+            }
+        }
+
+    override fun convertToEntityAttribute(dbData: PGobject?): JSONObject? =
+        dbData?.value?.let { JSONObject(it) }
 }

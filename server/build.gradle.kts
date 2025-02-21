@@ -19,17 +19,16 @@ tasks.withType<Jar> {
 }
 
 tasks.jar {
-    // Настраиваем манифест, указываем главный класс (замените на реальное имя вашего главного класса)
     manifest {
         attributes["Main-Class"] = "org.osint.server.ServerApplication" // замените на имя вашего главного класса
     }
-    // Включаем зависимости в jar (создаем fat jar)
     from({
         configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
     })
 }
 
 dependencies {
+    implementation("org.liquibase:liquibase-core:4.20.0")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.postgresql:postgresql:42.6.0")

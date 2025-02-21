@@ -6,6 +6,7 @@ import org.json.JSONObject
 import org.osint.server.domain.Scan
 import org.osint.server.domain.enums.ScanStatus
 import org.osint.server.repository.ScanRepository
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.annotation.Async
@@ -17,6 +18,7 @@ class ScanService(
     private val scanRepository: ScanRepository,
     @Autowired private val applicationContext: ApplicationContext
 ) {
+    private val logger = LoggerFactory.getLogger(ScanService::class.java)
 
     fun getAllScans(): List<Scan> = scanRepository.findAll()
 
@@ -24,8 +26,7 @@ class ScanService(
         val scan = Scan(
             domain = domain,
             startTime = LocalDateTime.now(),
-            status = ScanStatus.IN_PROGRESS,
-            output = null
+            status = ScanStatus.IN_PROGRESS
         )
         val savedScan = withContext(Dispatchers.IO) {
             scanRepository.save(scan)
@@ -43,6 +44,7 @@ class ScanService(
                 "enum", "-passive", "-d", scan.domain
             )
 
+            logger.info("Executing command: {}", command.joinToString(" "))
             val processBuilder = ProcessBuilder(command)
             processBuilder.redirectErrorStream(true)
             val process = processBuilder.start()
@@ -51,23 +53,32 @@ class ScanService(
             val exitCode = process.waitFor()
 
             scan.endTime = LocalDateTime.now()
-            val jsonResult = if (exitCode == 0) {
+
+            if (exitCode == 0) {
                 val results = output.lines().filter { it.isNotBlank() }
-                JSONObject().put("results", results).toString()
+                scan.output = JSONObject().put("results", results).toString()
+                scan.status = ScanStatus.COMPLETED
+                logger.info("Scan for domain {} completed successfully.", scan.domain)
             } else {
-                JSONObject()
+                scan.output = JSONObject()
                     .put("error", "Process exited with code $exitCode")
                     .put("output", output)
                     .toString()
+                scan.status = ScanStatus.FAILED
+                logger.error("Scan for domain {} failed with exit code {}.", scan.domain, exitCode)
             }
-            scan.output = jsonResult
-            scan.status = if (exitCode == 0) ScanStatus.COMPLETED else ScanStatus.FAILED
         } catch (ex: Exception) {
             scan.endTime = LocalDateTime.now()
             scan.status = ScanStatus.FAILED
             scan.output = JSONObject().put("exception", ex.message).toString()
+            logger.error("Exception during scan for domain {}: {}", scan.domain, ex.message, ex)
         } finally {
-            scanRepository.save(scan)
+            try {
+                scanRepository.save(scan)
+                logger.info("Scan record for domain {} updated in repository.", scan.domain)
+            } catch (e: Exception) {
+                logger.error("Failed to update scan record for domain {}: {}", scan.domain, e.message, e)
+            }
         }
     }
 }

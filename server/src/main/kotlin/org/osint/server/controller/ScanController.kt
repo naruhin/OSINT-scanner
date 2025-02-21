@@ -1,19 +1,32 @@
 package org.osint.server.controller
 
+
 import org.osint.server.domain.Scan
 import org.osint.server.domain.dto.ScanRequest
 import org.osint.server.service.ScanService
+import org.slf4j.LoggerFactory
+import org.springframework.http.ResponseEntity
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/")
+@RequestMapping("/api/v1/scans")
+@Validated
 class ScanController(private val scanService: ScanService) {
 
-    @GetMapping("/scans")
-    fun getScans(): List<Scan> = scanService.getAllScans()
+    private val logger = LoggerFactory.getLogger(ScanController::class.java)
 
-    @PostMapping("/scan")
-    suspend fun createScan(@RequestBody request: ScanRequest): Scan {
-        return scanService.initiateScan(request.domain)
+    @GetMapping
+    fun getScans(): ResponseEntity<List<Scan>> {
+        logger.info("Fetching all scans")
+        val scans = scanService.getAllScans()
+        return ResponseEntity.ok(scans)
+    }
+
+    @PostMapping
+    suspend fun createScan(@RequestBody request: ScanRequest): ResponseEntity<Scan> {
+        logger.info("Initiating scan for domain: {}", request.domain)
+        val scan = scanService.initiateScan(request.domain)
+        return ResponseEntity.ok(scan)
     }
 }
