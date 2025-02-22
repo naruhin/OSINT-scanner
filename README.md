@@ -43,6 +43,12 @@ Alternatively, you can run each module manually:
 #### Backend
 
 1. Navigate to the `server` folder.
+
+    Optional: if extra permissions are requiared
+    ```bash
+   chmod +x gradlew
+   ```
+   
 2. Build the application:
 
    ```bash
