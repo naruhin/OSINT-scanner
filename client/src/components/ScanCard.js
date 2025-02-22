@@ -6,7 +6,6 @@ import dayjs from 'dayjs';
 const ScanCard = ({ scan, onShowDetails }) => {
     const formatDate = (dateStr) => dayjs(dateStr).format('MMM D, YYYY h:mm A');
 
-    // Определяем стили и текст для статуса
     const getStatusProps = (status) => {
         switch (status) {
             case 'COMPLETED':
@@ -53,7 +52,6 @@ const ScanCard = ({ scan, onShowDetails }) => {
                     </Typography>
                 )}
             </CardContent>
-            {/* Статус в правом нижнем углу с Tooltip */}
             <Box
                 sx={{
                     position: 'absolute',

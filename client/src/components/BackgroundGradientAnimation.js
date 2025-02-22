@@ -1,21 +1,34 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Slider, Typography, IconButton, Paper, Collapse, Button } from '@mui/material';
+import {
+    Slider,
+    Typography,
+    IconButton,
+    Paper,
+    Collapse,
+    Button,
+} from '@mui/material';
 import { Settings as SettingsIcon, RestartAlt as ResetIcon } from '@mui/icons-material';
 import * as THREE from 'three';
 
+const DEFAULT_SETTINGS = {
+    numNodes: 100,
+    maxDistance: 120,
+    speed: 1.2,
+    nodeSize: 0.7,
+};
+
+const BOUNDARY = 250;
+const CAMERA_Z = 500;
+
 const BackgroundNeuralWebGL = () => {
     const canvasRef = useRef(null);
-    const [settings, setSettings] = useState({
-        numNodes: 100,
-        maxDistance: 120,
-        speed: 1.2,
-        nodeSize: 0.7,
-    });
-    const [showSettings, setShowSettings] = useState(false);
     const animationFrameId = useRef(null);
+    const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+    const [showSettings, setShowSettings] = useState(false);
 
     useEffect(() => {
         if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
+        if (!canvasRef.current) return;
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(
@@ -24,10 +37,11 @@ const BackgroundNeuralWebGL = () => {
             1,
             1000
         );
+        camera.position.z = CAMERA_Z;
+
         const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
-        camera.position.z = 500;
 
         const nodeMaterial = new THREE.PointsMaterial({
             color: 0x00ffff,
@@ -39,18 +53,18 @@ const BackgroundNeuralWebGL = () => {
         const positions = new Float32Array(settings.numNodes * 3);
         const velocities = new Float32Array(settings.numNodes * 3);
         for (let i = 0; i < settings.numNodes; i++) {
-            positions[i * 3] = (Math.random() - 0.5) * 500;
-            positions[i * 3 + 1] = (Math.random() - 0.5) * 500;
-            positions[i * 3 + 2] = (Math.random() - 0.5) * 500;
-            velocities[i * 3] = (Math.random() - 0.5) * settings.speed;
-            velocities[i * 3 + 1] = (Math.random() - 0.5) * settings.speed;
-            velocities[i * 3 + 2] = (Math.random() - 0.5) * settings.speed;
+            const idx = i * 3;
+            positions[idx] = (Math.random() - 0.5) * 500;
+            positions[idx + 1] = (Math.random() - 0.5) * 500;
+            positions[idx + 2] = (Math.random() - 0.5) * 500;
+            velocities[idx] = (Math.random() - 0.5) * settings.speed;
+            velocities[idx + 1] = (Math.random() - 0.5) * settings.speed;
+            velocities[idx + 2] = (Math.random() - 0.5) * settings.speed;
         }
         pointsGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         const points = new THREE.Points(pointsGeometry, nodeMaterial);
         scene.add(points);
 
-        // Create connections (neural links)
         const maxSegments = (settings.numNodes * (settings.numNodes - 1)) / 2;
         const linePositions = new Float32Array(maxSegments * 2 * 3);
         const lineGeometry = new THREE.BufferGeometry();
@@ -58,6 +72,7 @@ const BackgroundNeuralWebGL = () => {
         lineAttribute.setUsage(THREE.DynamicDrawUsage);
         lineGeometry.setAttribute('position', lineAttribute);
         lineGeometry.setDrawRange(0, 0);
+
         const lineMaterial = new THREE.LineBasicMaterial({
             color: 0x00ffff,
             transparent: true,
@@ -70,21 +85,26 @@ const BackgroundNeuralWebGL = () => {
             animationFrameId.current = requestAnimationFrame(animate);
             let count = 0;
             const posArray = points.geometry.attributes.position.array;
+
             for (let i = 0; i < settings.numNodes; i++) {
                 const iIndex = i * 3;
                 posArray[iIndex] += velocities[iIndex];
                 posArray[iIndex + 1] += velocities[iIndex + 1];
                 posArray[iIndex + 2] += velocities[iIndex + 2];
+
                 for (let j = 0; j < 3; j++) {
-                    if (posArray[iIndex + j] > 250 || posArray[iIndex + j] < -250)
+                    if (posArray[iIndex + j] > BOUNDARY || posArray[iIndex + j] < -BOUNDARY) {
                         velocities[iIndex + j] *= -1;
+                    }
                 }
+
                 for (let j = i + 1; j < settings.numNodes; j++) {
                     const jIndex = j * 3;
                     const dx = posArray[iIndex] - posArray[jIndex];
                     const dy = posArray[iIndex + 1] - posArray[jIndex + 1];
                     const dz = posArray[iIndex + 2] - posArray[jIndex + 2];
                     const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
                     if (distance < settings.maxDistance) {
                         linePositions[count++] = posArray[iIndex];
                         linePositions[count++] = posArray[iIndex + 1];
@@ -109,6 +129,7 @@ const BackgroundNeuralWebGL = () => {
             camera.updateProjectionMatrix();
         };
         window.addEventListener('resize', handleResize);
+
         return () => {
             cancelAnimationFrame(animationFrameId.current);
             window.removeEventListener('resize', handleResize);
@@ -116,18 +137,10 @@ const BackgroundNeuralWebGL = () => {
         };
     }, [settings]);
 
-    const resetSettings = () => {
-        setSettings({
-            numNodes: 100,
-            maxDistance: 120,
-            speed: 1.2,
-            nodeSize: 0.7,
-        });
-    };
+    const resetSettings = () => setSettings(DEFAULT_SETTINGS);
 
     return (
         <>
-            {/* Animated gradient background */}
             <div
                 style={{
                     position: 'fixed',
@@ -155,7 +168,7 @@ const BackgroundNeuralWebGL = () => {
                 }}
             />
 
-            {/* Gear icon button */}
+            {/* Кнопка открытия настроек */}
             <IconButton
                 sx={{
                     position: 'fixed',
@@ -168,15 +181,21 @@ const BackgroundNeuralWebGL = () => {
                     height: 50,
                     transition: 'transform 0.2s ease, box-shadow 0.3s ease',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.6)',
-                    '&:hover': { transform: 'scale(1.1)', boxShadow: '0 4px 8px rgba(0,0,0,0.8)' },
-                    '&:active': { transform: 'scale(0.95)', boxShadow: '0 1px 2px rgba(0,0,0,0.6)' },
+                    '&:hover': {
+                        transform: 'scale(1.1)',
+                        boxShadow: '0 4px 8px rgba(0,0,0,0.8)',
+                    },
+                    '&:active': {
+                        transform: 'scale(0.95)',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.6)',
+                    },
                 }}
-                onClick={() => setShowSettings(prev => !prev)}
+                onClick={() => setShowSettings((prev) => !prev)}
             >
                 <SettingsIcon />
             </IconButton>
 
-            {/* Settings menu */}
+            {/* Панель настроек */}
             <Collapse in={showSettings}>
                 <Paper
                     sx={{
@@ -205,7 +224,9 @@ const BackgroundNeuralWebGL = () => {
                         min={30}
                         max={150}
                         size="small"
-                        onChange={(e, val) => setSettings(prev => ({ ...prev, numNodes: val }))}
+                        onChange={(e, value) =>
+                            setSettings((prev) => ({ ...prev, numNodes: value }))
+                        }
                     />
 
                     <Typography variant="caption" color="cyan">
@@ -216,7 +237,9 @@ const BackgroundNeuralWebGL = () => {
                         min={50}
                         max={300}
                         size="small"
-                        onChange={(e, val) => setSettings(prev => ({ ...prev, maxDistance: val }))}
+                        onChange={(e, value) =>
+                            setSettings((prev) => ({ ...prev, maxDistance: value }))
+                        }
                     />
 
                     <Typography variant="caption" color="cyan">
@@ -228,7 +251,9 @@ const BackgroundNeuralWebGL = () => {
                         max={3}
                         step={0.1}
                         size="small"
-                        onChange={(e, val) => setSettings(prev => ({ ...prev, speed: val }))}
+                        onChange={(e, value) =>
+                            setSettings((prev) => ({ ...prev, speed: value }))
+                        }
                     />
 
                     <Typography variant="caption" color="cyan">
@@ -240,7 +265,9 @@ const BackgroundNeuralWebGL = () => {
                         max={1.5}
                         step={0.1}
                         size="small"
-                        onChange={(e, val) => setSettings(prev => ({ ...prev, nodeSize: val }))}
+                        onChange={(e, value) =>
+                            setSettings((prev) => ({ ...prev, nodeSize: value }))
+                        }
                     />
 
                     <Button

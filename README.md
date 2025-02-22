@@ -35,27 +35,6 @@ OSINT-scanner/
 - **Client:** Node.js and npm installed.
 - (Optional) Use a Unix-like environment for best compatibility with the provided Gradle task.
 
-### Using the Gradle Task
-
-A custom Gradle task `runLocal` is provided in the root `build.gradle.kts`. This task will:
-
-1. Clean and build the backend.
-2. Launch the backend using the `:server:bootRun` task.
-3. Launch the client using `npm start` in the `client` directory.
-4. Print the access URLs for both applications.
-
-To run the task, execute in the root directory:
-
-```bash
-./gradlew runLocal
-```
-
-You should see messages like:
-
-- **Backend is accessible at:** http://localhost:8080
-- **Client is accessible at:** http://localhost:3000
-
-Press Ctrl+C to gracefully terminate both processes. (A shutdown hook will attempt to stop both processes.)
 
 ### Manual Steps
 
@@ -76,7 +55,7 @@ Alternatively, you can run each module manually:
    ./gradlew bootRun
    ```
 
-4. The backend will be available at: [http://localhost:8080](http://localhost:8080)
+4. The backend will be available at: [http://localhost:8181](http://localhost:8080)
 
 #### Client
 
@@ -151,7 +130,7 @@ Alternatively, you can run each module manually:
           dialect: org.hibernate.dialect.PostgreSQLDialect
 
   server:
-    port: 8080
+    port: 8181
   ```
 
 - **Docker Socket Access:**  

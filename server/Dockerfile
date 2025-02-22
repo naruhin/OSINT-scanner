@@ -24,5 +24,5 @@ RUN apt-get update && \
     apt-get install -y docker.io && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/server/build/libs/*.jar /app/app.jar
-EXPOSE 8080
+EXPOSE 8181
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
