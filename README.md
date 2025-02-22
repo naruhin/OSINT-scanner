@@ -44,11 +44,16 @@ Alternatively, you can run each module manually:
 
 1. Navigate to the `server` folder.
 
-    Optional: if extra permissions are requiared
-    ```bash
-   chmod +x gradlew
+     ```bash
+   cd server
    ```
-   
+
+
+Optional: if extra permissions are requaered
+
+```bash
+    chmod +x gradlew
+   ```
 2. Build the application:
 
    ```bash
@@ -66,6 +71,11 @@ Alternatively, you can run each module manually:
 #### Client
 
 1. Navigate to the `client` folder.
+
+     ```bash
+   cd client
+   ```
+
 2. Install dependencies:
 
    ```bash

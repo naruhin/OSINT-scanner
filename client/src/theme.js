@@ -5,8 +5,8 @@ const theme = createTheme({
         mode: 'dark',
         primary: { main: '#064d85' },
         background: {
-            default: '#0D0D0D', // основной фон приложения
-            paper: 'rgba(28,28,28,0.6)', // фон контейнеров с увеличенной прозрачностью
+            default: '#0D0D0D',
+            paper: 'rgba(28,28,28,0.6)',
         },
         text: {
             primary: '#E0E0E0',
@@ -41,7 +41,7 @@ const theme = createTheme({
         MuiTextField: {
             styleOverrides: {
                 root: {
-                    backgroundColor: 'rgba(28,28,28,0.6)', // увеличенная прозрачность
+                    backgroundColor: 'rgba(28,28,28,0.6)',
                     borderRadius: 12,
                     '& .MuiInputBase-input': {
                         color: '#E0E0E0',
@@ -69,9 +69,9 @@ const theme = createTheme({
             styleOverrides: {
                 root: {
                     borderRadius: 12,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.7)', // только тень, без обводки
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.7)',
                     padding: '16px',
-                    backgroundColor: 'rgba(28,28,28,0.7)', // немного прозрачнее
+                    backgroundColor: 'rgba(28,28,28,0.7)',
                 },
             },
         },
@@ -80,8 +80,8 @@ const theme = createTheme({
                 root: {
                     borderRadius: 12,
                     padding: '16px',
-                    backgroundColor: 'rgba(28,28,28,0.6)', // прозрачный фон для контейнеров
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.7)', // используем тени вместо обводки
+                    backgroundColor: 'rgba(28,28,28,0.6)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.7)',
                 },
             },
         },
